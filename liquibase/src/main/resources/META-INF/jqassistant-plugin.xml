@@ -1,0 +1,28 @@
+<jqa-plugin:jqassistant-plugin
+        xmlns:jqa-plugin="http://www.buschmais.com/jqassistant/core/plugin/schema/v1.0">
+    <description>Provides a scanner for Liquibase changelog files.</description>
+    <model>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.TableDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.ColumnExistsDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.LogicDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionsDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.TableExistsDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddColumnDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddPrimaryKeyDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddUniqueConstraintDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.ColumnDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropColumnDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropTableDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.SqlDescriptor</class>
+    </model>
+    <scanner>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.LiquibaseScannerPlugin</class>
+    </scanner>
+</jqa-plugin:jqassistant-plugin>
