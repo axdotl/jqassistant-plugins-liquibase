@@ -66,7 +66,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LiquibaseScannerPlugin.class);
     private JAXBContext jaxbContext;
-    XMLInputFactory factory;
+    private XMLInputFactory factory;
 
     @Override
     protected void initialize() {
