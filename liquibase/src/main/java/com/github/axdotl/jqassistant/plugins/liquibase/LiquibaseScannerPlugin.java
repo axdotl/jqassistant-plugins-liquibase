@@ -2,7 +2,9 @@ package com.github.axdotl.jqassistant.plugins.liquibase;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -38,14 +40,10 @@ import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResour
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionsDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddColumnDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddPrimaryKeyDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddUniqueConstraintDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropTableDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.SqlDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
@@ -64,8 +62,14 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlSc
  */
 public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, ChangeLogDescriptor> {
 
+    /** It's the logger my friend. */
     private static final Logger LOGGER = LoggerFactory.getLogger(LiquibaseScannerPlugin.class);
+    /** Mapping of refactoring elements to related scanner instance. */
+    @SuppressWarnings("rawtypes")
+    private final Map<Class, LiquibaseElementScanner> scannerMap = new HashMap<Class, LiquibaseElementScanner>();
+    /** Used to unmarshal changelog, will be initialized once to improve performance. */
     private JAXBContext jaxbContext;
+    /** Used to check whether the given file has <code>databaseChangeLog</code> as root element -&gt; it's a liquibase changelog file. */
     private XMLInputFactory factory;
 
     @Override
@@ -76,6 +80,14 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             e.printStackTrace();
         }
         factory = XMLInputFactory.newInstance();
+
+        // Register scanner instances for certain refactoring types
+        scannerMap.put(CreateTable.class, new CreateTableScanner());
+        scannerMap.put(DropTable.class, new DropTableScanner());
+        scannerMap.put(Sql.class, new SqlScanner());
+        scannerMap.put(AddColumn.class, new AddColumnScanner());
+        scannerMap.put(AddPrimaryKey.class, new AddPrimaryKeyScanner());
+        scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
     }
 
     @Override
@@ -125,59 +137,28 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             return null;
         }
 
-        List<Object> changesets = changeLog.getChangeSetOrIncludeOrIncludeAll();
+        List<Object> changeLogChildren = changeLog.getChangeSetOrIncludeOrIncludeAll();
 
-        for (Object o : changesets) {
+        ChangeSetDescriptor lastChangeSetOfChangeLog = null;
+        for (Object o : changeLogChildren) {
 
             if (o instanceof ChangeSet) {
-                ChangeSet changeSet = (ChangeSet) o;
-                ChangeSetDescriptor changeSetDescriptor = scanner.getContext().getStore().create(ChangeSetDescriptor.class);
-                changeSetDescriptor.setAuthor(changeSet.getAuthor());
-                changeSetDescriptor.setId(changeSet.getId());
+                ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o);
 
-                // Scan preconditions
-                PreConditions preConditions = changeSet.getPreConditions();
-                if (preConditions != null) {
-                    PreconditionsDescriptor preconditionsDescriptor = scanPrecondition(preConditions, scanner);
-                    changeSetDescriptor.getPreconditions().add(preconditionsDescriptor);
+                if (lastChangeSetOfChangeLog != null) {
+                    lastChangeSetOfChangeLog.setNextChangeSet(setDescriptor);
                 }
-
-                List<Object> changeSetChildren = changeSet.getChangeSetChildren();
-                for (Object child : changeSetChildren) {
-
-                    // Looking for the changeset comment
-                    if (child instanceof JAXBElement) {
-                        @SuppressWarnings("unchecked")
-                        String comment = ((JAXBElement<String>) child).getValue();
-                        changeSetDescriptor.setComment(comment);
-                        continue;
-                    }
-                    // determine more detailed information about refactoring
-                    changeSetDescriptor.getRefactorings().add(scanRefactoring(child, scanner));
-                }
-
-                changeLogDescriptor.getChangeSets().add(changeSetDescriptor);
+                lastChangeSetOfChangeLog = setDescriptor;
+                changeLogDescriptor.getChangeSets().add(setDescriptor);
             }
 
             else if (o instanceof Include) {
-                Include include = (Include) o;
-                IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
-
-                includeDescriptor.setIncludeAll(false);
-                includeDescriptor.setFileName(include.getFile());
-                includeDescriptor.setRelativeToChangelogFile(BooleanUtils.toBoolean(include.getRelativeToChangelogFile()));
-
+                IncludeDescriptor includeDescriptor = scanInclude(scanner, (Include) o);
                 changeLogDescriptor.getIncludes().add(includeDescriptor);
             }
 
             else if (o instanceof IncludeAll) {
-                IncludeAll includeAll = (IncludeAll) o;
-                IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
-
-                includeDescriptor.setIncludeAll(true);
-                includeDescriptor.setFileName(includeAll.getPath());
-                includeDescriptor.setRelativeToChangelogFile(BooleanUtils.toBoolean(includeAll.getRelativeToChangelogFile()));
-
+                IncludeDescriptor includeDescriptor = scanIncludeAll(scanner, (IncludeAll) o);
                 changeLogDescriptor.getIncludes().add(includeDescriptor);
             }
         }
@@ -186,57 +167,65 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     }
 
     /**
-     * Scans a single refactoring.
+     * Scans a single changeset, creates a node and connect it
      * 
-     * @param refactoring
-     *            current element
      * @param scanner
-     *            scanner to create elements
-     * @return created descriptor
+     * @param changeSet
+     * @return
      */
-    private RefactoringDescriptor scanRefactoring(Object refactoring, Scanner scanner) {
+    private ChangeSetDescriptor scanChangeSet(Scanner scanner, ChangeSet changeSet) {
+        ChangeSetDescriptor changeSetDescriptor = scanner.getContext().getStore().create(ChangeSetDescriptor.class);
+        changeSetDescriptor.setAuthor(changeSet.getAuthor());
+        changeSetDescriptor.setId(changeSet.getId());
 
-        LOGGER.debug("Scan refactoring: " + refactoring);
-
-        RefactoringDescriptor descriptor = null;
-
-        if (refactoring instanceof CreateTable) {
-            CreateTable createTable = (CreateTable) refactoring;
-            CreateTableDescriptor createTableDescriptor = new CreateTableScanner().scanElement(createTable, scanner);
-            descriptor = createTableDescriptor;
-
-        } else if (refactoring instanceof DropTable) {
-            DropTable dropTable = (DropTable) refactoring;
-            DropTableDescriptor dropTableDescriptor = new DropTableScanner().scanElement(dropTable, scanner);
-            descriptor = dropTableDescriptor;
-
-        } else if (refactoring instanceof Sql) {
-            Sql sql = (Sql) refactoring;
-            SqlDescriptor sqlDescriptor = new SqlScanner().scanElement(sql, scanner);
-            descriptor = sqlDescriptor;
-
-        } else if (refactoring instanceof AddColumn) {
-            AddColumn addColumn = (AddColumn) refactoring;
-            AddColumnDescriptor addColumnDescriptor = new AddColumnScanner().scanElement(addColumn, scanner);
-            descriptor = addColumnDescriptor;
-
-        } else if (refactoring instanceof AddPrimaryKey) {
-            AddPrimaryKey addPrimaryKey = (AddPrimaryKey) refactoring;
-            AddPrimaryKeyDescriptor addPrimaryKeyDescriptor = new AddPrimaryKeyScanner().scanElement(addPrimaryKey, scanner);
-            descriptor = addPrimaryKeyDescriptor;
-
-        } else if (refactoring instanceof AddUniqueConstraint) {
-            AddUniqueConstraint addUniqueConstraint = (AddUniqueConstraint) refactoring;
-            AddUniqueConstraintDescriptor addUniqueConstraintDescriptor = new AddUniqueConstraintScanner().scanElement(addUniqueConstraint, scanner);
-            descriptor = addUniqueConstraintDescriptor;
-
-        } else {
-            // default
-            descriptor = scanner.getContext().getStore().create(RefactoringDescriptor.class);
+        // Scan preconditions
+        PreConditions preConditions = changeSet.getPreConditions();
+        if (preConditions != null) {
+            PreconditionsDescriptor preconditionsDescriptor = scanPrecondition(preConditions, scanner);
+            changeSetDescriptor.getPreconditions().add(preconditionsDescriptor);
         }
-        descriptor.setRefactoringTypeName(refactoring.getClass().getSimpleName());
 
-        return descriptor;
+        List<Object> changeSetChildren = changeSet.getChangeSetChildren();
+
+        RefactoringDescriptor lastRefactoringOfChangeSet = null;
+        for (Object child : changeSetChildren) {
+
+            // Looking for the changeset comment
+            if (child instanceof JAXBElement) {
+                @SuppressWarnings("unchecked")
+                String comment = ((JAXBElement<String>) child).getValue();
+                changeSetDescriptor.setComment(comment);
+                continue;
+            }
+            // determine more detailed information about refactoring
+            RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
+            if (lastRefactoringOfChangeSet != null) {
+                lastRefactoringOfChangeSet.setNextRefactoring(refactoringDescriptor);
+            }
+            lastRefactoringOfChangeSet = refactoringDescriptor;
+            changeSetDescriptor.getRefactorings().add(refactoringDescriptor);
+        }
+        return changeSetDescriptor;
+    }
+
+    private IncludeDescriptor scanInclude(Scanner scanner, Include include) {
+        IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
+
+        includeDescriptor.setIncludeAll(false);
+        includeDescriptor.setFileName(include.getFile());
+        includeDescriptor.setRelativeToChangelogFile(BooleanUtils.toBoolean(include.getRelativeToChangelogFile()));
+
+        return includeDescriptor;
+    }
+
+    private IncludeDescriptor scanIncludeAll(Scanner scanner, IncludeAll includeAll) {
+        IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
+
+        includeDescriptor.setIncludeAll(true);
+        includeDescriptor.setFileName(includeAll.getPath());
+        includeDescriptor.setRelativeToChangelogFile(BooleanUtils.toBoolean(includeAll.getRelativeToChangelogFile()));
+
+        return includeDescriptor;
     }
 
     /**
@@ -262,5 +251,32 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         }
 
         return descriptor;
+    }
+
+    /**
+     * Scans a single refactoring.
+     * 
+     * @param refactoring
+     *            current element
+     * @param scanner
+     *            scanner to create elements
+     * @return created descriptor
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private RefactoringDescriptor scanRefactoring(Object refactoring, Scanner scanner) {
+
+        LOGGER.debug("Scan refactoring: " + refactoring);
+
+        LiquibaseDescriptor descriptor = null;
+        LiquibaseElementScanner liquibaseElementScanner = scannerMap.get(refactoring.getClass());
+        if (liquibaseElementScanner != null) {
+            descriptor = liquibaseElementScanner.scanElement(refactoring, scanner);
+        } else {
+            descriptor = scanner.getContext().getStore().create(RefactoringDescriptor.class);
+        }
+        RefactoringDescriptor result = (RefactoringDescriptor) descriptor;
+        result.setRefactoringTypeName(refactoring.getClass().getSimpleName());
+
+        return result;
     }
 }

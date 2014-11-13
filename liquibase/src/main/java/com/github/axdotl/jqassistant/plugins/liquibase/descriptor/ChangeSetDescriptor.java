@@ -1,9 +1,14 @@
 package com.github.axdotl.jqassistant.plugins.liquibase.descriptor;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
 import java.util.List;
 
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
+import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
+import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionsDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
 
@@ -33,4 +38,21 @@ public interface ChangeSetDescriptor extends LiquibaseDescriptor {
 
     @Relation("HAS_PRECONDITION")
     List<PreconditionsDescriptor> getPreconditions();
+
+    @Outgoing
+    @NextChangeSet
+    ChangeSetDescriptor getNextChangeSet();
+
+    void setNextChangeSet(ChangeSetDescriptor changeSetDescriptor);
+
+    @Incoming
+    @NextChangeSet
+    ChangeSetDescriptor getPreviousChangeSet();
+
+    void setPreviousChangeSet(ChangeSetDescriptor changeSetDescriptor);
+
+    @Relation("NEXT_CHANGESET")
+    @Retention(RUNTIME)
+    public @interface NextChangeSet {
+    }
 }

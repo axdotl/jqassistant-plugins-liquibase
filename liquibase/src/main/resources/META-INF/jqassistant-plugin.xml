@@ -7,6 +7,8 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.TableDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.ColumnDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.IndexDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.ColumnExistsDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.LogicDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionDescriptor</class>
@@ -15,7 +17,7 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddColumnDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddPrimaryKeyDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddUniqueConstraintDescriptor</class>
-        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.ColumnDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.relation.HasChangeSetDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropColumnDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropTableDescriptor</class>
