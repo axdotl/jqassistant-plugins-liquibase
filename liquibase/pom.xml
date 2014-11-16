@@ -2,11 +2,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.axdotl.jqassistant.plugins</groupId>
 	<artifactId>liquibase</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.2</version>
 
 	<scm>
 		<connection>scm:git:https://github.com/axdotl/jqassistant-plugins-liquibase.git</connection>
-		<tag>HEAD</tag>
+		<tag>liquibase-0.0.2</tag>
 	</scm>
 
 	<distributionManagement>
