@@ -2,3 +2,5 @@
 /.project
 /.classpath
 /.settings/
+/release.properties
+/*.releaseBackup
