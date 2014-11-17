@@ -6,6 +6,8 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/axdotl/jqassistant-plugins-liquibase.git</connection>
+		<developerConnection>scm:git:git@github.com:axdotl/jqassistant-plugins-liquibase.git</developerConnection>
+        <url>https://github.com/axdotl/jqassistant-plugins-liquibase</url>		
 		<tag>HEAD</tag>
 	</scm>
 
@@ -17,13 +19,19 @@
 		</repository>
 	</distributionManagement>
 
+	<properties>
+		<com.buschmais.jqassistant_version>1.0.0-M4</com.buschmais.jqassistant_version>
+		<org.jvnet.jaxb2.maven2_version>0.11.0</org.jvnet.jaxb2.maven2_version>
+		<org.slf4j_version>1.7.7</org.slf4j_version>
+	</properties>	
+	
 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-release-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<useReleaseProfile>false</useReleaseProfile>
+					<useReleaseProfile>true</useReleaseProfile>
 					<releaseProfiles>release</releaseProfiles>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
@@ -48,7 +56,7 @@
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
-				<version>0.9.0</version>
+				<version>${org.jvnet.jaxb2.maven2_version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -111,18 +119,18 @@
 		<dependency>
 			<groupId>com.buschmais.jqassistant.core</groupId>
 			<artifactId>jqassistant.core.scanner</artifactId>
-			<version>1.0.0-M4</version>
+			<version>${com.buschmais.jqassistant_version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.buschmais.jqassistant.plugin</groupId>
 			<artifactId>jqassistant.plugin.common</artifactId>
-			<version>1.0.0-M4</version>
+			<version>${com.buschmais.jqassistant_version}</version>
 		</dependency>
 		<!-- Other -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.5</version>
+			<version>${org.slf4j_version}</version>
 		</dependency>
 
 	</dependencies>
