@@ -23,6 +23,7 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropColumnDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropTableDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropConstraintDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.SqlDescriptor</class>
     </model>

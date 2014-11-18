@@ -29,7 +29,10 @@ import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet.PreConditions;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.Include;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.IncludeAll;
+import org.liquibase.xml.ns.dbchangelog.DropForeignKeyConstraint;
+import org.liquibase.xml.ns.dbchangelog.DropPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.DropTable;
+import org.liquibase.xml.ns.dbchangelog.DropUniqueConstraint;
 import org.liquibase.xml.ns.dbchangelog.ObjectFactory;
 import org.liquibase.xml.ns.dbchangelog.Sql;
 import org.slf4j.Logger;
@@ -53,6 +56,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddNo
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropTableScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlScanner;
 
@@ -102,6 +106,9 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
         scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
         scannerMap.put(AddNotNullConstraint.class, new AddNotNullConstraintScanner());
+        scannerMap.put(DropPrimaryKey.class, new DropConstraintScanner());
+        scannerMap.put(DropForeignKeyConstraint.class, new DropConstraintScanner());
+        scannerMap.put(DropUniqueConstraint.class, new DropConstraintScanner());
     }
 
     @Override
