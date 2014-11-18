@@ -21,6 +21,9 @@ RETURN log.fileName, set.id,  set.author, addPk.tableName, addPk.columnNames, ad
 LIMIT 100;
 ```
 
+### CI
+[![Build Status](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase.svg)](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase)
+
 ### Get it!
 [ ![Download](https://api.bintray.com/packages/axdotl/jqa-plugins/jqassistant-plugins-liquibase/images/download.svg) ](https://bintray.com/axdotl/jqa-plugins/jqassistant-plugins-liquibase/_latestVersion)
 
