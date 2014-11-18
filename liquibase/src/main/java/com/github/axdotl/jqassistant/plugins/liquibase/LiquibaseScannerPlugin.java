@@ -19,6 +19,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.liquibase.xml.ns.dbchangelog.AddColumn;
+import org.liquibase.xml.ns.dbchangelog.AddForeignKeyConstraint;
 import org.liquibase.xml.ns.dbchangelog.AddPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.AddUniqueConstraint;
 import org.liquibase.xml.ns.dbchangelog.CreateTable;
@@ -46,6 +47,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.Re
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddForeignKeyScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
@@ -56,9 +58,11 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlSc
  * Scanner for Liquibase database change log files.
  * 
  * @version <b>0.1:</b> Supports <a href=
- *          "http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd</a>
+ *          "http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd"
+ *          >http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd</a>
  * @author Axel Koehler
- * @see <a href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
+ * @see <a
+ *      href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
  */
 public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, ChangeLogDescriptor> {
 
@@ -67,9 +71,15 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     /** Mapping of refactoring elements to related scanner instance. */
     @SuppressWarnings("rawtypes")
     private final Map<Class, LiquibaseElementScanner> scannerMap = new HashMap<Class, LiquibaseElementScanner>();
-    /** Used to unmarshal changelog, will be initialized once to improve performance. */
+    /**
+     * Used to unmarshal changelog, will be initialized once to improve
+     * performance.
+     */
     private JAXBContext jaxbContext;
-    /** Used to check whether the given file has <code>databaseChangeLog</code> as root element -&gt; it's a liquibase changelog file. */
+    /**
+     * Used to check whether the given file has <code>databaseChangeLog</code>
+     * as root element -&gt; it's a liquibase changelog file.
+     */
     private XMLInputFactory factory;
 
     @Override
@@ -88,6 +98,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         scannerMap.put(AddColumn.class, new AddColumnScanner());
         scannerMap.put(AddPrimaryKey.class, new AddPrimaryKeyScanner());
         scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
+        scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
     }
 
     @Override
