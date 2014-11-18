@@ -20,6 +20,7 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.liquibase.xml.ns.dbchangelog.AddColumn;
 import org.liquibase.xml.ns.dbchangelog.AddForeignKeyConstraint;
+import org.liquibase.xml.ns.dbchangelog.AddNotNullConstraint;
 import org.liquibase.xml.ns.dbchangelog.AddPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.AddUniqueConstraint;
 import org.liquibase.xml.ns.dbchangelog.CreateTable;
@@ -48,6 +49,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementS
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddForeignKeyScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddNotNullConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
@@ -97,8 +99,9 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         scannerMap.put(Sql.class, new SqlScanner());
         scannerMap.put(AddColumn.class, new AddColumnScanner());
         scannerMap.put(AddPrimaryKey.class, new AddPrimaryKeyScanner());
-        scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
         scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
+        scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
+        scannerMap.put(AddNotNullConstraint.class, new AddNotNullConstraintScanner());
     }
 
     @Override

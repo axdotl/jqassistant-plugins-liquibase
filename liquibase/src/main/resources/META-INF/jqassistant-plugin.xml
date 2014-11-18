@@ -18,6 +18,7 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddPrimaryKeyDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddForeignKeyDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddUniqueConstraintDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddNotNullConstraintDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.relation.HasChangeSetDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropColumnDescriptor</class>
