@@ -1,24 +1,19 @@
 //-- Top 10 authors
-MATCH (c:ChangeSet)
-RETURN c.author, COUNT(c.author)
-ORDER BY count(c.author) DESC
+MATCH (set:ChangeSet)
+RETURN set.author, COUNT(set.author) as number
+ORDER BY number DESC
 LIMIT 10;
 
-//-- Number of changes per author
-MATCH (c:ChangeSet)
-RETURN c.author, COUNT(c.author)
-ORDER BY c.author;
-
 //-- Number of refactorings per type
-MATCH (r:Refactoring)
-RETURN r.name, COUNT(r.name)
-ORDER BY r.name;
+MATCH (ref:Refactoring)
+RETURN ref.name, COUNT(ref.name)
+ORDER BY ref.name;
 
 //-- All AddPrimaryKey changes w/o a constraint name or constraint name not like '<table_name>_PK'
-MATCH (changeLog:ChangeLog)-[:HAS_CHANGESET]->(changeSet:ChangeSet)-[:HAS_REFACTORING]->(pkChange:AddPrimaryKey)
-WHERE pkChange.constraintName <> UPPER(pkChange.tableName)+"_PK"
-  OR pkChange.constraintName IS NULL
-RETURN changeLog.fileName, changeSet.id,  changeSet.author, pkChange.tableName,pkChange.columnNames, pkChange.constraintName
+MATCH (log:ChangeLog)-[:HAS_CHANGESET]->(set:ChangeSet)-[:HAS_REFACTORING]->(addPk:AddPrimaryKey)
+WHERE addPk.constraintName <> UPPER(addPk.tableName)+"_PK"
+  OR addPk.constraintName IS NULL
+RETURN log.fileName, set.id,  set.author, addPk.tableName, addPk.columnNames, addPk.constraintName
 LIMIT 100;
 
 //-- Find createTable changes which have an AddPrimaryKey change as successor
