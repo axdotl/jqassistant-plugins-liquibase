@@ -16,6 +16,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.liquibase.xml.ns.dbchangelog.AddColumn;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
+import com.buschmais.jqassistant.core.store.api.model.Descriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
@@ -64,11 +66,9 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlSc
  * Scanner for Liquibase database change log files.
  * 
  * @version <b>0.1:</b> Supports <a href=
- *          "http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd"
- *          >http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd</a>
+ *          "http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd</a>
  * @author Axel Koehler
- * @see <a
- *      href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
+ * @see <a href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
  */
 public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, ChangeLogDescriptor> {
 
@@ -78,13 +78,11 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     @SuppressWarnings("rawtypes")
     private final Map<Class, LiquibaseElementScanner> scannerMap = new HashMap<Class, LiquibaseElementScanner>();
     /**
-     * Used to unmarshal changelog, will be initialized once to improve
-     * performance.
+     * Used to unmarshal changelog, will be initialized once to improve performance.
      */
     private JAXBContext jaxbContext;
     /**
-     * Used to check whether the given file has <code>databaseChangeLog</code>
-     * as root element -&gt; it's a liquibase changelog file.
+     * Used to check whether the given file has <code>databaseChangeLog</code> as root element -&gt; it's a liquibase changelog file.
      */
     private XMLInputFactory factory;
 
@@ -161,11 +159,19 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         List<Object> changeLogChildren = changeLog.getChangeSetOrIncludeOrIncludeAll();
 
         ChangeSetDescriptor lastChangeSetOfChangeLog = null;
+        RefactoringDescriptor lastRefactoringOfPreviousChangeSet = null;
         for (Object o : changeLogChildren) {
 
             if (o instanceof ChangeSet) {
-                ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o);
+                ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o, lastRefactoringOfPreviousChangeSet);
 
+                // Memorize last refactoring of last changeset to link it with refacotring of next changeset
+                List<RefactoringDescriptor> refactorings = setDescriptor.getRefactorings();
+                if (CollectionUtils.isNotEmpty(refactorings)) {
+                    lastRefactoringOfPreviousChangeSet = refactorings.get(refactorings.size() - 1);
+                }
+
+                // Link changesets
                 if (lastChangeSetOfChangeLog != null) {
                     lastChangeSetOfChangeLog.setNextChangeSet(setDescriptor);
                 }
@@ -191,10 +197,14 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
      * Scans a single changeset, creates a node and connect it
      * 
      * @param scanner
+     *            To create {@link Descriptor}s
      * @param changeSet
-     * @return
+     *            Current changeSet
+     * @param lastRefactoringOfPreviousSet
+     *            refactoring of the last scanned changeset, can be <code>null</code>.
+     * @return The {@link ChangeSetDescriptor}
      */
-    private ChangeSetDescriptor scanChangeSet(Scanner scanner, ChangeSet changeSet) {
+    private ChangeSetDescriptor scanChangeSet(Scanner scanner, ChangeSet changeSet, RefactoringDescriptor lastRefactoringOfPreviousSet) {
         ChangeSetDescriptor changeSetDescriptor = scanner.getContext().getStore().create(ChangeSetDescriptor.class);
         changeSetDescriptor.setAuthor(changeSet.getAuthor());
         changeSetDescriptor.setId(changeSet.getId());
@@ -208,7 +218,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
         List<Object> changeSetChildren = changeSet.getChangeSetChildren();
 
-        RefactoringDescriptor lastRefactoringOfChangeSet = null;
+        RefactoringDescriptor lastRefactoringOfChangeSet = lastRefactoringOfPreviousSet;
         for (Object child : changeSetChildren) {
 
             // Looking for the changeset comment
@@ -221,11 +231,13 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             // determine more detailed information about refactoring
             RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
             if (lastRefactoringOfChangeSet != null) {
+                // Link refactorings
                 lastRefactoringOfChangeSet.setNextRefactoring(refactoringDescriptor);
             }
             lastRefactoringOfChangeSet = refactoringDescriptor;
             changeSetDescriptor.getRefactorings().add(refactoringDescriptor);
         }
+
         return changeSetDescriptor;
     }
 
