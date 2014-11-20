@@ -5,6 +5,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.util.List;
 
+import com.buschmais.xo.api.annotation.Transient;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
@@ -35,6 +36,11 @@ public interface ChangeSetDescriptor extends LiquibaseDescriptor {
 
     @Relation("HAS_REFACTORING")
     List<RefactoringDescriptor> getRefactorings();
+
+    @Transient
+    RefactoringDescriptor getLastRefactoring();
+
+    void setLastRefactoring(RefactoringDescriptor refactoringDescriptor);
 
     @Relation("HAS_PRECONDITION")
     List<PreconditionsDescriptor> getPreconditions();

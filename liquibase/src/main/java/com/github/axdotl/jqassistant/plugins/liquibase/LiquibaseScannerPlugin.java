@@ -16,7 +16,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.liquibase.xml.ns.dbchangelog.AddColumn;
@@ -164,15 +163,11 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
             if (o instanceof ChangeSet) {
                 ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o, lastRefactoringOfPreviousChangeSet);
+                // // Memorize last refactoring of last changeset to link it with refacotring of next changeset
+                lastRefactoringOfPreviousChangeSet = setDescriptor.getLastRefactoring();
 
-                // Memorize last refactoring of last changeset to link it with refacotring of next changeset
-                List<RefactoringDescriptor> refactorings = setDescriptor.getRefactorings();
-                if (CollectionUtils.isNotEmpty(refactorings)) {
-                    lastRefactoringOfPreviousChangeSet = refactorings.get(refactorings.size() - 1);
-                }
-
-                // Link changesets
                 if (lastChangeSetOfChangeLog != null) {
+                    // Link changesets
                     lastChangeSetOfChangeLog.setNextChangeSet(setDescriptor);
                 }
                 lastChangeSetOfChangeLog = setDescriptor;
@@ -232,10 +227,13 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
             if (lastRefactoringOfChangeSet != null) {
                 // Link refactorings
+                LOGGER.info("Setting next refactoring '{}'-->'{}'", lastRefactoringOfChangeSet, refactoringDescriptor);
                 lastRefactoringOfChangeSet.setNextRefactoring(refactoringDescriptor);
             }
-            lastRefactoringOfChangeSet = refactoringDescriptor;
             changeSetDescriptor.getRefactorings().add(refactoringDescriptor);
+            lastRefactoringOfChangeSet = refactoringDescriptor;
+            // update last refactoring on set
+            changeSetDescriptor.setLastRefactoring(lastRefactoringOfChangeSet);
         }
 
         return changeSetDescriptor;
