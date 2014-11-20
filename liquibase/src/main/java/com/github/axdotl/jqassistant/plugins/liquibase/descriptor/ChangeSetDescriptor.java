@@ -20,7 +20,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.Re
  * @see <a href="http://www.liquibase.org/documentation/changeset.html">http://www.liquibase.org/documentation/changeset.html</a>
  */
 @Label("ChangeSet")
-public interface ChangeSetDescriptor extends LiquibaseDescriptor {
+public interface ChangeSetDescriptor extends IncludeDescriptor {
 
     String getAuthor();
 
