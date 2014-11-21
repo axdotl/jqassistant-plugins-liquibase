@@ -168,6 +168,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
                 if (lastChangeSetOfChangeLog != null) {
                     // Link changesets
+                    LOGGER.debug("Setting next changeset '{}'-->'{}'", lastChangeSetOfChangeLog, setDescriptor);
                     lastChangeSetOfChangeLog.setNextChangeSet(setDescriptor);
                 }
                 lastChangeSetOfChangeLog = setDescriptor;
@@ -227,7 +228,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
             if (lastRefactoringOfChangeSet != null) {
                 // Link refactorings
-                LOGGER.info("Setting next refactoring '{}'-->'{}'", lastRefactoringOfChangeSet, refactoringDescriptor);
+                LOGGER.debug("Setting next refactoring '{}'-->'{}'", lastRefactoringOfChangeSet, refactoringDescriptor);
                 lastRefactoringOfChangeSet.setNextRefactoring(refactoringDescriptor);
             }
             changeSetDescriptor.getRefactorings().add(refactoringDescriptor);
