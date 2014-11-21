@@ -45,7 +45,6 @@ import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.Query.Result.CompositeRowObject;
-import com.buschmais.xo.api.ResultIterator;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor;
@@ -73,6 +72,11 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlSc
  * @see <a href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
  */
 public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, ChangeLogDescriptor> {
+
+    /** Cypher query to find an existing include node by file name */
+    private static final String QUERY_FIND_INCLUDE_BY_FILE_NAME = "MATCH(inc:Include) WHERE inc.fileName=\"%s\" RETURN inc";
+    /** Cypher query to find an existing changeLog node by file name */
+    private static final String QUERY_FIND_CHANGELOG_BY_FILE_NAME = "MATCH(log:ChangeLog) WHERE log.fileName=\"%s\" RETURN log";
 
     /** It's the logger my friend. */
     private static final Logger LOGGER = LoggerFactory.getLogger(LiquibaseScannerPlugin.class);
@@ -144,8 +148,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     @Override
     public ChangeLogDescriptor scan(FileResource item, String path, Scope scope, Scanner scanner) throws IOException {
 
-        // Root element - changeLog
-        ChangeLogDescriptor changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
+        ChangeLogDescriptor changeLogDescriptor = createChangeLogDescriptor(path, scanner);
 
         // Unmarshal DatabaseChangeLog
         DatabaseChangeLog changeLog;
@@ -165,21 +168,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         for (Object o : changeLogChildren) {
 
             if (o instanceof ChangeSet) {
-                Result<CompositeRowObject> query = scanner.getContext().getStore()
-                        .executeQuery("MATCH(i:Include) WHERE i.fileName=\"" + path + "\" RETURN i");
-                if (query.hasResult()) {
-                    ResultIterator<CompositeRowObject> iterator = query.iterator();
-                    while (iterator.hasNext()) {
-                        // IncludeDescriptor inc = iterator.next().get(path, IncludeDescriptor.class);
-                        LOGGER.info("Found inc: " + iterator.next());
-
-                    }
-                } else {
-                    LOGGER.info("No include found");
-                }
-
                 ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o, lastRefactoringOfPreviousChangeSet);
-                setDescriptor.setFileName(path);
                 // Memorize last refactoring of last changeset to link it with refacotring of next changeset
                 lastRefactoringOfPreviousChangeSet = setDescriptor.getLastRefactoring();
 
@@ -192,20 +181,12 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             }
 
             else if (o instanceof Include) {
-                Result<CompositeRowObject> query = scanner.getContext().getStore()
-                        .executeQuery("MATCH(cs:ChangeSet) WHERE cs.fileName=\"" + path + "\" RETURN cs");
-                if (query.hasResult()) {
-                    ResultIterator<CompositeRowObject> iterator = query.iterator();
-                    while (iterator.hasNext()) {
-                        // ChangeSetDescriptor csd = iterator.next().get(path, ChangeSetDescriptor.class);
-                        LOGGER.info("Found cs: " + iterator.next());
-                    }
-                } else {
-                    LOGGER.info("No cs found");
-                }
 
-                IncludeDescriptor includeDescriptor = scanInclude(scanner, (Include) o);
+                String changeLogParent = StringUtils.substringBeforeLast(changeLogDescriptor.getFileName(), "/");
+
+                IncludeDescriptor includeDescriptor = scanInclude(scanner, (Include) o, changeLogParent);
                 changeLogDescriptor.getIncludes().add(includeDescriptor);
+                // TODO If an existing ChangeLog was found the label 'ChangeLog' will be gone because of generalize to IncludeDescriptor
             }
 
             else if (o instanceof IncludeAll) {
@@ -229,6 +210,9 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
      * @return The {@link ChangeSetDescriptor}
      */
     private ChangeSetDescriptor scanChangeSet(Scanner scanner, ChangeSet changeSet, RefactoringDescriptor lastRefactoringOfPreviousSet) {
+
+        LOGGER.debug("Scan ChangeSet id=[{}]", changeSet.getId());
+
         ChangeSetDescriptor changeSetDescriptor = scanner.getContext().getStore().create(ChangeSetDescriptor.class);
         changeSetDescriptor.setAuthor(changeSet.getAuthor());
         changeSetDescriptor.setId(changeSet.getId());
@@ -268,12 +252,48 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         return changeSetDescriptor;
     }
 
-    private IncludeDescriptor scanInclude(Scanner scanner, Include include) {
-        IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
+    /**
+     * Scans an include. Checks whether a changelog-node already exists, then reuse this node.
+     * 
+     * @param scanner
+     *            To create {@link Descriptor}s
+     * @param include
+     *            Current include
+     * @param changeLogFolderPath
+     *            Path to folder where changelog is located
+     * @return Creates {@link IncludeDescriptor}
+     */
+    private IncludeDescriptor scanInclude(Scanner scanner, Include include, String changeLogFolderPath) {
 
+        String file = include.getFile();
+        LOGGER.debug("Scan include. File=[{}]", file);
+        IncludeDescriptor includeDescriptor;
+        StringBuilder pathBuilder = new StringBuilder();
+
+        // Include can be specified relative to changelog, so create absolute path
+        if (BooleanUtils.toBoolean(include.getRelativeToChangelogFile())) {
+            LOGGER.debug("Include file attribute is relative to changelog. ChangeLogFolderPath:[{}], File=[{}]", changeLogFolderPath, file);
+            pathBuilder.append(changeLogFolderPath);
+            pathBuilder.append("/");
+            pathBuilder.append(include.getFile());
+            file = pathBuilder.toString();
+        }
+
+        Result<CompositeRowObject> query = scanner.getContext().getStore().executeQuery(String.format(QUERY_FIND_CHANGELOG_BY_FILE_NAME, file));
+        if (query.hasResult()) {
+            LOGGER.debug("ChangeLog for path '{}' already exists. Use this i.s.o. creating new one.", file);
+            CompositeRowObject queryResult = query.getSingleResult();
+            includeDescriptor = queryResult.get("log", ChangeLogDescriptor.class);
+        } else {
+            LOGGER.debug("No ChangeLog for path '{}' exists yet. New include will be created.", file);
+            includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
+        }
+
+        // Apply values to descriptor
         includeDescriptor.setIncludeAll(false);
-        includeDescriptor.setFileName(include.getFile());
         includeDescriptor.setRelativeToChangelogFile(BooleanUtils.toBoolean(include.getRelativeToChangelogFile()));
+        includeDescriptor.setFile(include.getFile());
+        includeDescriptor.setFileName(file);
 
         return includeDescriptor;
     }
@@ -325,7 +345,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private RefactoringDescriptor scanRefactoring(Object refactoring, Scanner scanner) {
 
-        LOGGER.debug("Scan refactoring: " + refactoring);
+        LOGGER.debug("Scan refactoring: " + refactoring.getClass().getSimpleName());
 
         LiquibaseDescriptor descriptor = null;
         LiquibaseElementScanner liquibaseElementScanner = scannerMap.get(refactoring.getClass());
@@ -338,5 +358,38 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         result.setRefactoringTypeName(refactoring.getClass().getSimpleName());
 
         return result;
+    }
+
+    /**
+     * Creates a new node for the current changeLog. Check whether an include-node for this changelog already exists, than reuse values from this.
+     * 
+     * @param path
+     *            patch of current file
+     * @param scanner
+     *            scanner to create {@link Descriptor}
+     * @return created {@link ChangeLogDescriptor}
+     */
+    private ChangeLogDescriptor createChangeLogDescriptor(String path, Scanner scanner) {
+
+        Result<CompositeRowObject> query = scanner.getContext().getStore().executeQuery(String.format(QUERY_FIND_INCLUDE_BY_FILE_NAME, path));
+        ChangeLogDescriptor changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
+
+        if (query.hasResult()) {
+            LOGGER.debug("Found Include for path=[{}]. Apply values to ChangeLog.", path);
+            CompositeRowObject queryResult = query.getSingleResult();
+            IncludeDescriptor incDesc = queryResult.get("inc", IncludeDescriptor.class);
+            changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
+            changeLogDescriptor.setIncludeAll(incDesc.isIncludeAll());
+            changeLogDescriptor.setRelativeToChangelogFile(incDesc.isRelativeToChangelogFile());
+            changeLogDescriptor.setFile(incDesc.getFile());
+            // TODO delete include node
+        } else {
+            LOGGER.debug("No Include found for path=[{}].", path);
+        }
+
+        // Root element - changeLog
+        changeLogDescriptor.setFileName(path);
+
+        return changeLogDescriptor;
     }
 }
