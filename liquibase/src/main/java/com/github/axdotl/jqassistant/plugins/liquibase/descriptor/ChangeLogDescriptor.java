@@ -2,7 +2,6 @@ package com.github.axdotl.jqassistant.plugins.liquibase.descriptor;
 
 import java.util.List;
 
-import com.buschmais.jqassistant.core.store.api.model.FileDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 
@@ -13,7 +12,7 @@ import com.buschmais.xo.neo4j.api.annotation.Relation;
  * @see <a href="http://www.liquibase.org/documentation/databasechangelog.html">http://www.liquibase.org/documentation/databasechangelog.html</a>
  */
 @Label("ChangeLog")
-public interface ChangeLogDescriptor extends FileDescriptor, LiquibaseDescriptor {
+public interface ChangeLogDescriptor extends IncludeDescriptor {
 
     @Relation("HAS_CHANGESET")
     List<ChangeSetDescriptor> getChangeSets();

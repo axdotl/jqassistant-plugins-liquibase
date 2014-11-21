@@ -19,4 +19,8 @@ public interface IncludeDescriptor extends FileDescriptor, LiquibaseDescriptor {
     boolean isRelativeToChangelogFile();
 
     void setRelativeToChangelogFile(boolean relativeToChangelogFile);
+
+    String getFile();
+
+    void setFile(String file);
 }
