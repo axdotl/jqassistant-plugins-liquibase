@@ -43,6 +43,9 @@ import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.store.api.model.Descriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
+import com.buschmais.xo.api.Query.Result;
+import com.buschmais.xo.api.Query.Result.CompositeRowObject;
+import com.buschmais.xo.api.ResultIterator;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor;
@@ -162,8 +165,22 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         for (Object o : changeLogChildren) {
 
             if (o instanceof ChangeSet) {
+                Result<CompositeRowObject> query = scanner.getContext().getStore()
+                        .executeQuery("MATCH(i:Include) WHERE i.fileName=\"" + path + "\" RETURN i");
+                if (query.hasResult()) {
+                    ResultIterator<CompositeRowObject> iterator = query.iterator();
+                    while (iterator.hasNext()) {
+                        // IncludeDescriptor inc = iterator.next().get(path, IncludeDescriptor.class);
+                        LOGGER.info("Found inc: " + iterator.next());
+
+                    }
+                } else {
+                    LOGGER.info("No include found");
+                }
+
                 ChangeSetDescriptor setDescriptor = scanChangeSet(scanner, (ChangeSet) o, lastRefactoringOfPreviousChangeSet);
-                // // Memorize last refactoring of last changeset to link it with refacotring of next changeset
+                setDescriptor.setFileName(path);
+                // Memorize last refactoring of last changeset to link it with refacotring of next changeset
                 lastRefactoringOfPreviousChangeSet = setDescriptor.getLastRefactoring();
 
                 if (lastChangeSetOfChangeLog != null) {
@@ -175,6 +192,18 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             }
 
             else if (o instanceof Include) {
+                Result<CompositeRowObject> query = scanner.getContext().getStore()
+                        .executeQuery("MATCH(cs:ChangeSet) WHERE cs.fileName=\"" + path + "\" RETURN cs");
+                if (query.hasResult()) {
+                    ResultIterator<CompositeRowObject> iterator = query.iterator();
+                    while (iterator.hasNext()) {
+                        // ChangeSetDescriptor csd = iterator.next().get(path, ChangeSetDescriptor.class);
+                        LOGGER.info("Found cs: " + iterator.next());
+                    }
+                } else {
+                    LOGGER.info("No cs found");
+                }
+
                 IncludeDescriptor includeDescriptor = scanInclude(scanner, (Include) o);
                 changeLogDescriptor.getIncludes().add(includeDescriptor);
             }
