@@ -30,4 +30,7 @@
     <scanner>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.LiquibaseScannerPlugin</class>
     </scanner>
+    <rules>
+    	 <resource>liquibase.xml</resource>
+    </rules>
 </jqa-plugin:jqassistant-plugin>

@@ -236,7 +236,9 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
                 String comment = ((JAXBElement<String>) child).getValue();
                 changeSetDescriptor.setComment(comment);
                 continue;
+
             }
+
             // determine more detailed information about refactoring
             RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
             if (lastRefactoringOfChangeSet != null) {

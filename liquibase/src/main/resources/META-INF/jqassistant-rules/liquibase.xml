@@ -1,34 +1,26 @@
 <jqa:jqassistant-rules xmlns:jqa="http://www.buschmais.com/jqassistant/core/analysis/rules/schema/v1.0">
 
-	<group id="default">
-		<includeConstraint refId="liquibase:ChangeSetWithoutAuthor" />
-		<includeConstraint refId="liquibase:ChangeSetWithoutId" />
-		<includeConstraint refId="liquibase:ChangeSetWithoutComment" />
-	</group>
-
-	<constraint id="liquibase:ChangeSetWithoutAuthor">
-		<description>All change sets has to specify the author attribute.
-		</description>
-		<cypher><![CDATA[
-			MATCH
-			  (set:ChangeSet)
-			WHERE
-			  NOT HAS(set.author) 
-			RETURN
-			  set
-        ]]></cypher>
-	</constraint>
-
 	<constraint id="liquibase:ChangeSetWithoutId">
-		<description>All change sets has to specify the id attribute.
-		</description>
+		<description>All change sets has to specify the id attribute.</description>
 		<cypher><![CDATA[
 			MATCH
-			  (set:ChangeSet)
+			  (log)-[:HAS_CHANGESET]->(set:ChangeSet)
 			WHERE
 			  NOT HAS(set.id) 
 			RETURN
-			  set
+			  log.fileName, set.author
+        ]]></cypher>
+	</constraint>
+
+	<constraint id="liquibase:ChangeSetWithoutAuthor">
+		<description>All change sets has to specify the author attribute.</description>
+		<cypher><![CDATA[
+			MATCH
+			  (log)-[:HAS_CHANGESET]->(set:ChangeSet)
+			WHERE
+			  NOT HAS(set.author) 
+			RETURN
+			  log.fileName, set.id
         ]]></cypher>
 	</constraint>
 
@@ -36,11 +28,11 @@
 		<description>All change sets has to specify a comment.</description>
 		<cypher><![CDATA[
 			MATCH
-			  (set:ChangeSet)
+			  (log)-[:HAS_CHANGESET]->(set:ChangeSet)
 			WHERE
 			  NOT HAS(set.comment) 
 			RETURN
-			  set
+			  log.fileName, set.id, set.author
         ]]></cypher>
 	</constraint>
 
