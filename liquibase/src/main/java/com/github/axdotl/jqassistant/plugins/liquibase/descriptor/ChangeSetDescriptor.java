@@ -12,6 +12,7 @@ import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionsDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.RollbackDescriptor;
 
 /**
  * Descriptor for a database change set.
@@ -56,6 +57,11 @@ public interface ChangeSetDescriptor extends LiquibaseDescriptor {
     ChangeSetDescriptor getPreviousChangeSet();
 
     void setPreviousChangeSet(ChangeSetDescriptor changeSetDescriptor);
+
+    @Relation("HAS_ROLLBACK")
+    RollbackDescriptor getRollback();
+
+    void setRollback(RollbackDescriptor rollback);
 
     @Relation("NEXT_CHANGESET")
     @Retention(RUNTIME)

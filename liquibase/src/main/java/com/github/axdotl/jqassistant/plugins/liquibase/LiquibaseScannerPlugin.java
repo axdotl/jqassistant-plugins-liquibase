@@ -16,6 +16,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.liquibase.xml.ns.dbchangelog.AddColumn;
@@ -34,6 +35,7 @@ import org.liquibase.xml.ns.dbchangelog.DropPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.DropTable;
 import org.liquibase.xml.ns.dbchangelog.DropUniqueConstraint;
 import org.liquibase.xml.ns.dbchangelog.ObjectFactory;
+import org.liquibase.xml.ns.dbchangelog.Rollback;
 import org.liquibase.xml.ns.dbchangelog.Sql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,9 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescrip
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionsDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.RollbackDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.RollbackRefactoringDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.exception.BlankStringRefactoringException;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
@@ -94,6 +99,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
     @Override
     protected void initialize() {
+
         try {
             jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
         } catch (JAXBException e) {
@@ -238,9 +244,23 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
                 continue;
 
             }
+            // It's a Rollback
+            else if (child instanceof Rollback) {
+                Rollback rollback = (Rollback) child;
+                RollbackDescriptor rollbackDescriptor = scanRollback(rollback, scanner);
+                changeSetDescriptor.setRollback(rollbackDescriptor);
+                continue;
+
+            }
 
             // determine more detailed information about refactoring
-            RefactoringDescriptor refactoringDescriptor = scanRefactoring(child, scanner);
+            RefactoringDescriptor refactoringDescriptor;
+            try {
+                refactoringDescriptor = scanRefactoring(child, scanner);
+            } catch (BlankStringRefactoringException e) {
+                LOGGER.debug("Skip element, because it is a blank string.");
+                continue;
+            }
             if (lastRefactoringOfChangeSet != null) {
                 // Link refactorings
                 LOGGER.debug("Setting next refactoring '{}'-->'{}'", lastRefactoringOfChangeSet, refactoringDescriptor);
@@ -302,6 +322,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     }
 
     private IncludeDescriptor scanIncludeAll(Scanner scanner, IncludeAll includeAll) {
+
         IncludeDescriptor includeDescriptor = scanner.getContext().getStore().create(IncludeDescriptor.class);
 
         includeDescriptor.setIncludeAll(true);
@@ -337,18 +358,25 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     }
 
     /**
-     * Scans a single refactoring.
+     * Scans a single refactoring.<br />
      * 
      * @param refactoring
      *            current element
      * @param scanner
      *            scanner to create elements
-     * @return created descriptor
+     * @return Created {@link RefactoringDescriptor}
+     * 
+     * @throws BlankStringRefactoringException
+     *             If refacotoring is a blank String for instance.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private RefactoringDescriptor scanRefactoring(Object refactoring, Scanner scanner) {
+    private RefactoringDescriptor scanRefactoring(Object refactoring, Scanner scanner) throws BlankStringRefactoringException {
 
-        LOGGER.debug("Scan refactoring: " + refactoring.getClass().getSimpleName());
+        LOGGER.debug("Scan refactoring. Type=[{}]", refactoring.getClass().getSimpleName());
+
+        if (refactoring instanceof String && StringUtils.isBlank(refactoring.toString())) {
+            throw new BlankStringRefactoringException();
+        }
 
         LiquibaseDescriptor descriptor = null;
         LiquibaseElementScanner liquibaseElementScanner = scannerMap.get(refactoring.getClass());
@@ -361,6 +389,66 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         result.setRefactoringTypeName(refactoring.getClass().getSimpleName());
 
         return result;
+    }
+
+    /**
+     * Scans a {@link Rollback} element and analyze nested refactorings.
+     * 
+     * @param rollback
+     *            Analyze it
+     * @param scanner
+     *            scanner to create elements
+     * @return created {@link RollbackDescriptor}
+     */
+    private RollbackDescriptor scanRollback(Rollback rollback, Scanner scanner) {
+
+        LOGGER.debug("Scan rollback. '{}'", rollback);
+
+        RollbackDescriptor rollbackDescriptor = scanner.getContext().getStore().create(RollbackDescriptor.class);
+        rollbackDescriptor.setChangeSetAuthor(rollback.getChangeSetAuthor());
+        rollbackDescriptor.setChangeSetId(rollback.getChangeSetId());
+        rollbackDescriptor.setChangeSetPath(rollback.getChangeSetPath());
+
+        List<Object> rollbackStatements = rollback.getContent();
+        if (CollectionUtils.isEmpty(rollbackStatements)) {
+            // No rollback statements, so we're done.
+            return rollbackDescriptor;
+        }
+
+        RollbackRefactoringDescriptor lastRefactoringOfRollback = null;
+        for (Object refactoring : rollbackStatements) {
+
+            RefactoringDescriptor refactoringDescriptor;
+            try {
+                refactoringDescriptor = scanRefactoring(refactoring, scanner);
+            } catch (BlankStringRefactoringException e) {
+                LOGGER.debug("Skip element, because it is a blank string.");
+                continue;
+            }
+
+            // Maybe there is a rollback comment
+            if (refactoring instanceof JAXBElement) {
+                @SuppressWarnings("unchecked")
+                String comment = ((JAXBElement<String>) refactoring).getValue();
+                rollbackDescriptor.setComment(comment);
+                continue;
+
+            }
+
+            // Make descriptor more specific
+            // FIXME Loss of information; all interfaces (and labels) needs to be applied. Class#getInterfaces
+            RollbackRefactoringDescriptor rollbackRefactoringDescriptor = scanner.getContext().getStore()
+                    .migrate(refactoringDescriptor, RollbackRefactoringDescriptor.class, RefactoringDescriptor.class, LiquibaseDescriptor.class);
+
+            rollbackDescriptor.getRollbackRefactorings().add(rollbackRefactoringDescriptor);
+            if (lastRefactoringOfRollback != null) {
+                // link the rollback statements
+                lastRefactoringOfRollback.setNextRefactoring(rollbackRefactoringDescriptor);
+            }
+            lastRefactoringOfRollback = rollbackRefactoringDescriptor;
+        }
+
+        return rollbackDescriptor;
     }
 
     /**

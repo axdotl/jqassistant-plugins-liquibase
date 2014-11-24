@@ -1,5 +1,4 @@
-<jqa-plugin:jqassistant-plugin
-        xmlns:jqa-plugin="http://www.buschmais.com/jqassistant/core/plugin/schema/v1.0">
+<jqa-plugin:jqassistant-plugin xmlns:jqa-plugin="http://www.buschmais.com/jqassistant/core/plugin/schema/v1.0">
     <description>Provides a scanner for Liquibase changelog files.</description>
     <model>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor</class>
@@ -9,6 +8,8 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.TableDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.ColumnDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.common.IndexDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.RollbackDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.RollbackRefactoringDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.ColumnExistsDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.LogicDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.preconditions.PreconditionDescriptor</class>
@@ -31,6 +32,6 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.LiquibaseScannerPlugin</class>
     </scanner>
     <rules>
-    	 <resource>liquibase.xml</resource>
+        <resource>liquibase.xml</resource>
     </rules>
 </jqa-plugin:jqassistant-plugin>
