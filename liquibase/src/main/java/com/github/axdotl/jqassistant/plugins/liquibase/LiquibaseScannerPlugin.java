@@ -380,7 +380,6 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
             CompositeRowObject queryResult = query.getSingleResult();
             IncludeDescriptor incDesc = queryResult.get("inc", IncludeDescriptor.class);
             changeLogDescriptor = scanner.getContext().getStore().migrate(incDesc, ChangeLogDescriptor.class);
-            changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
             changeLogDescriptor.setIncludeAll(incDesc.isIncludeAll());
             changeLogDescriptor.setRelativeToChangelogFile(incDesc.isRelativeToChangelogFile());
             changeLogDescriptor.setFile(incDesc.getFile());
