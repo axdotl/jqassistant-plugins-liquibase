@@ -36,4 +36,17 @@
         ]]></cypher>
 	</constraint>
 
+	<constraint id="liquibase:SqlRefactoringWithoutRollback">
+		<description>A change with SQL refactoring must provide a rollback element.</description>
+		<cypher><![CDATA[
+            MATCH
+              (log:ChangeLog)-[:HAS_CHANGESET]->(set:ChangeSet)-[:HAS_REFACTORING]->(sql:Sql)
+            WHERE 
+              NOT ((set)-[:HAS_ROLLBACK]->(:Rollback)) 
+            RETURN 
+              log.fileName, set.id, set.author
+        ]]></cypher>
+	</constraint>
+
+
 </jqa:jqassistant-rules>
