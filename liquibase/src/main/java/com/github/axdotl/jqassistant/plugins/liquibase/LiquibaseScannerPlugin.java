@@ -373,19 +373,21 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     private ChangeLogDescriptor createChangeLogDescriptor(String path, Scanner scanner) {
 
         Result<CompositeRowObject> query = scanner.getContext().getStore().executeQuery(String.format(QUERY_FIND_INCLUDE_BY_FILE_NAME, path));
-        ChangeLogDescriptor changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
+        ChangeLogDescriptor changeLogDescriptor;
 
         if (query.hasResult()) {
             LOGGER.debug("Found Include for path=[{}]. Apply values to ChangeLog.", path);
             CompositeRowObject queryResult = query.getSingleResult();
             IncludeDescriptor incDesc = queryResult.get("inc", IncludeDescriptor.class);
+            changeLogDescriptor = scanner.getContext().getStore().migrate(incDesc, ChangeLogDescriptor.class);
             changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
             changeLogDescriptor.setIncludeAll(incDesc.isIncludeAll());
             changeLogDescriptor.setRelativeToChangelogFile(incDesc.isRelativeToChangelogFile());
             changeLogDescriptor.setFile(incDesc.getFile());
-            // TODO delete include node
+
         } else {
             LOGGER.debug("No Include found for path=[{}].", path);
+            changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
         }
 
         // Root element - changeLog
