@@ -4,6 +4,8 @@ Liquibase plugin for [jQAssistant](https://github.com/buschmais/jqassistant)
 
 [![Build Status](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase.svg)](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase)
 
+[ ![Download](https://api.bintray.com/packages/axdotl/maven/jqassistant-plugins-liquibase/images/download.svg) ](https://bintray.com/axdotl/maven/jqassistant-plugins-liquibase/_latestVersion)
+
 ##### Screen
 ![Latest](https://github.com/axdotl/jqassistant-plugins-liquibase/blob/master/liquibase/screens/latest.png)
 
