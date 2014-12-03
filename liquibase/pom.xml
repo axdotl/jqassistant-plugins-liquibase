@@ -1,13 +1,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.axdotl.jqassistant.plugins</groupId>
-	<artifactId>liquibase</artifactId>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>9</version>
+	</parent>
+	<groupId>com.github.axdotl</groupId>
+	<artifactId>jqassistant-plugins-liquibase</artifactId>
 	<version>0.0.3-SNAPSHOT</version>
+
+	<name>com.github.axdotl:jqassistant-plugin-liquibase</name>
+	<description>Liquibase plugin for jQAssistant</description>
+	<url>https://github.com/axdotl/jqassistant-plugins-liquibase</url>
+
+	<licenses>
+		<license>
+			<name>GNU General Public License, v3</name>
+			<url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>axdotl</id>
+			<name>Axel Koehler</name>
+			<url>https://github.com/axdotl/</url>
+		</developer>
+	</developers>
 
 	<scm>
 		<connection>scm:git:https://github.com/axdotl/jqassistant-plugins-liquibase.git</connection>
 		<developerConnection>scm:git:git@github.com:axdotl/jqassistant-plugins-liquibase.git</developerConnection>
-        <url>https://github.com/axdotl/jqassistant-plugins-liquibase</url>		
+		<url>https://github.com/axdotl/jqassistant-plugins-liquibase</url>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -23,8 +47,8 @@
 		<com.buschmais.jqassistant_version>1.0.0-M4</com.buschmais.jqassistant_version>
 		<org.jvnet.jaxb2.maven2_version>0.11.0</org.jvnet.jaxb2.maven2_version>
 		<org.slf4j_version>1.7.7</org.slf4j_version>
-	</properties>	
-	
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -43,7 +67,7 @@
 				<configuration>
 					<excludePackageNames>org.liquibase.xml.ns.*</excludePackageNames>
 				</configuration>
-			</plugin>			
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
