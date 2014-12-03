@@ -7,7 +7,7 @@
     </parent>
     <groupId>com.github.axdotl</groupId>
     <artifactId>jqassistant-plugins-liquibase</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4-SNAPSHOT</version>
 
     <name>com.github.axdotl:jqassistant-plugin-liquibase</name>
     <description>Liquibase plugin for jQAssistant</description>
@@ -32,7 +32,7 @@
         <connection>scm:git:https://github.com/axdotl/jqassistant-plugins-liquibase.git</connection>
         <developerConnection>scm:git:git@github.com:axdotl/jqassistant-plugins-liquibase.git</developerConnection>
         <url>https://github.com/axdotl/jqassistant-plugins-liquibase</url>
-        <tag>0.0.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
