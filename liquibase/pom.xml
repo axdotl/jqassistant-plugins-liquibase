@@ -47,13 +47,17 @@
         <com.buschmais.jqassistant_version>1.0.0-M4</com.buschmais.jqassistant_version>
         <org.jvnet.jaxb2.maven2_version>0.11.0</org.jvnet.jaxb2.maven2_version>
         <org.slf4j_version>1.7.7</org.slf4j_version>
+        <maven-release-plugin_version>2.5.1</maven-release-plugin_version>
+        <maven-javadoc-plugin_version>2.10.1</maven-javadoc-plugin_version>
+        <maven-compiler-plugin_version>3.1</maven-compiler-plugin_version>
     </properties>
 
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.1</version>
+                <!-- Override b/o tagNameFormat available since 2.2 -->
+                <version>${maven-release-plugin_version}</version><!--$NO-MVN-MAN-VER$-->
                 <configuration>
                     <useReleaseProfile>true</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
@@ -64,7 +68,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.1</version>
+                <version>${maven-javadoc-plugin_version}</version>
                 <configuration>
                     <excludePackageNames>org.liquibase.xml.ns.*</excludePackageNames>
                 </configuration>
@@ -72,7 +76,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>${maven-compiler-plugin_version}</version>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
@@ -157,6 +161,5 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>${org.slf4j_version}</version>
         </dependency>
-
     </dependencies>
 </project>
