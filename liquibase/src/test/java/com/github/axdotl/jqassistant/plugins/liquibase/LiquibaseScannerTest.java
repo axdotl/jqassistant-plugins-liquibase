@@ -21,7 +21,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescr
  * 
  * @author Axel Koehler
  */
-public class LiquibaseScannerShould extends AbstractPluginIT {
+public class LiquibaseScannerTest extends AbstractPluginIT {
 
     private final static String DIR_NON_CHANGELOG = "nonChangeLog";
     private final static String DIR_CHANGELOG = "changeLog";
@@ -40,7 +40,7 @@ public class LiquibaseScannerShould extends AbstractPluginIT {
     public void prepare() {
 
         scanner = getScanner();
-        testClassesDir = getClassesDirectory(LiquibaseScannerShould.class);
+        testClassesDir = getClassesDirectory(LiquibaseScannerTest.class);
     }
 
     /**
