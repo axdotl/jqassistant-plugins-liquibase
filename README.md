@@ -1,6 +1,6 @@
 ## jQAssistant-plugins-liquibase
 
-Liquibase plugin for [jQAssistant](https://github.com/buschmais/jqassistant)
+Liquibase plugin for [jQAssistant](https://jqassistant.org)
 
 [![Build Status](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase.svg)](https://travis-ci.org/axdotl/jqassistant-plugins-liquibase)
 
@@ -32,4 +32,58 @@ WHERE addPk.constraintName <> UPPER(addPk.tableName)+"_PK"
   OR addPk.constraintName IS NULL
 RETURN log.fileName, set.id,  set.author, addPk.tableName, addPk.columnNames, addPk.constraintName
 LIMIT 100;
+```
+
+### Getting started using Maven
+
+* Add the dependency to the jQAssistant Maven plugin
+
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<groupId>com.buschmais.jqassistant.scm</groupId>
+			<artifactId>jqassistant-maven-plugin</artifactId>
+			<version>1.0.0-M4</version>
+			<executions>
+				<execution>
+					<goals>
+						<goal>scan</goal>
+						<goal>analyze</goal>
+					</goals>
+				</execution>
+			</executions>
+			<dependencies>
+				<dependency>
+					<groupId>com.github.axdotl</groupId>
+					<artifactId>jqassistant-plugins-liquibase</artifactId>
+					<version>0.0.3</version>
+				</dependency>
+			</dependencies>
+		</plugin>
+	</plugins>
+</build>
+```
+
+* Check availability of the rules
+
+```
+mvn jqassistant:available-rules
+```
+
+The output will contain the following constraints:
+
+```
+"liquibase:ChangeSetWithoutComment" - All change sets has to specify a comment.
+"liquibase:ChangeSetWithoutId" - All change sets has to specify the id attribute.
+"liquibase:SqlRefactoringWithoutRollback" - A change with SQL refactoring must provide a rollback element.
+```
+
+* Scan and analyze
+
+Note: your liquibase changelog descriptors must be classpath resources (e.g. located in "src/main/resources")
+
+```
+mvn jqassistant:scan
+mvn jqassistant:analyze -Djqassistant.constraints=liquibase:ChangeSetWithoutComment,liquibase:ChangeSetWithoutId,liquibase:SqlRefactoringWithoutRollback
 ```
