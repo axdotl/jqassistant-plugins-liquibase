@@ -48,5 +48,20 @@
         ]]></cypher>
 	</constraint>
 
+	<constraint id="liquibase:DropRefactoringWithoutPrecondition">
+		<description>A change with DROP refactoring must define preconditions.</description>
+		<cypher><![CDATA[
+            MATCH
+              (log:ChangeLog)-[:HAS_CHANGESET]->(set:ChangeSet)-[:HAS_REFACTORING]->(ref:Refactoring),
+              (set)-[:HAS_PRECONDITION]->(pre:Preconditions)
+            WHERE 
+              ref.refactoringTypeName =~ 'Drop.*'
+            AND
+              pre IS NULL
+            RETURN 
+             log.fileName, set.id, set.author, ref.refactoringTypeName;
+        ]]></cypher>
+	</constraint>
+
 
 </jqa:jqassistant-rules>
