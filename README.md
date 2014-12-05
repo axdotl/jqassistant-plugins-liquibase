@@ -1,4 +1,4 @@
-### jQAssistant-plugins-liquibase
+## jQAssistant-plugins-liquibase
 
 Liquibase plugin for [jQAssistant](https://github.com/buschmais/jqassistant)
 
@@ -6,8 +6,17 @@ Liquibase plugin for [jQAssistant](https://github.com/buschmais/jqassistant)
 
 [ ![Download](https://api.bintray.com/packages/axdotl/maven/jqassistant-plugins-liquibase/images/download.svg) ](https://bintray.com/axdotl/maven/jqassistant-plugins-liquibase/_latestVersion)
 
-##### Screen
+### Screen
 ![Latest](https://github.com/axdotl/jqassistant-plugins-liquibase/blob/master/liquibase/screens/latest.png)
+
+### Available constraints
+* ChangeSet
+  * w/o ID
+  * w/o author
+  * w/o comment
+* SQL refactoring w/o rollback
+* DROP refactorings w/o preCondition
+
 
 ### Example queries
 ```
