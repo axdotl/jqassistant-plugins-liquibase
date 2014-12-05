@@ -144,7 +144,7 @@
     </profiles>
 
     <dependencies>
-        <!-- JQAssistant -->
+        <!-- jQAssistant -->
         <dependency>
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>jqassistant.core.scanner</artifactId>

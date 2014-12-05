@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="complete" author="axdotl">
+        <comment>Changeset provide precondition, comment, refactorings and rollback.</comment>
+        <preConditions>
+            <not>
+                <tableExists tableName="TABLE1" />
+            </not>
+        </preConditions>
+        <createTable tableName="TABLE1">
+            <column name="ID" type="NUMBER(19)" />
+            <column name="NAME" type="VARCHAR2(255)" />
+        </createTable>
+
+        <addPrimaryKey tableName="TABLE1" columnNames="ID" constraintName="TABLE1_PK" />
+
+        <rollback>
+            <comment>Since refactorings has out-of-the-box rollback this section is redundant. Just for testing.</comment>
+            <dropPrimaryKey tableName="TABLE1" />
+            <dropTable tableName="TABLE1" />
+        </rollback>
+    </changeSet>
+
+    <changeSet id="sql" author="axdotl">
+        <comment>A SQL change.</comment>
+        <sql>
+        <![CDATA[
+            CREATE TABLE TABLE2 (
+              ID NUMBER(19),
+              DESC VARCHAR2(255)
+            )
+        ]]>
+        </sql>
+        <rollback />
+    </changeSet>
+
+</databaseChangeLog>
