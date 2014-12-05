@@ -57,12 +57,12 @@
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
                 <!-- Override b/o tagNameFormat available since 2.2 -->
-                <version>${maven-release-plugin_version}</version><!--$NO-MVN-MAN-VER$-->
+                <version>${maven-release-plugin_version}</version><!--$NO-MVN-MAN-VER$ -->
                 <configuration>
                     <useReleaseProfile>true</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-					<tagNameFormat>@{project.version}</tagNameFormat>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <plugin>
@@ -160,6 +160,41 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${org.slf4j_version}</version>
+        </dependency>
+        <!-- Test-related -->
+<!--         
+        <dependency>
+            <groupId>com.buschmais.jqassistant.core</groupId>
+            <artifactId>jqassistant.core.store</artifactId>
+            <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.buschmais.jqassistant.core</groupId>
+            <artifactId>jqassistant.core.analysis</artifactId>
+            <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.buschmais.jqassistant.plugin</groupId>
+            <artifactId>jqassistant.plugin.java</artifactId>
+            <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+            <scope>test</scope>
+        </dependency>
+ -->        
+        <dependency>
+            <groupId>com.buschmais.jqassistant.plugin</groupId>
+            <artifactId>jqassistant.plugin.common</artifactId>
+            <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
         </dependency>
     </dependencies>
 </project>
