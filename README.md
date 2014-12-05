@@ -62,7 +62,7 @@ LIMIT 100;
 			</dependencies>
 		</plugin>
 	</plugins>
-</plugin>
+</build>
 ```
 
 * Check availability of the rules
