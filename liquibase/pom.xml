@@ -50,6 +50,8 @@
         <maven-release-plugin_version>2.5.1</maven-release-plugin_version>
         <maven-javadoc-plugin_version>2.10.1</maven-javadoc-plugin_version>
         <maven-compiler-plugin_version>3.1</maven-compiler-plugin_version>
+        <org.mockito_version>1.10.8</org.mockito_version>
+        <junit_version>4.11</junit_version>
     </properties>
 
     <build>
@@ -172,13 +174,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>${junit_version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.10.8</version>
+            <version>${org.mockito_version}</version>
             <scope>test</scope>
         </dependency>
 
