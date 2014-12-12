@@ -7,9 +7,13 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
+import com.buschmais.jqassistant.core.plugin.api.PluginRepositoryException;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
-import com.buschmais.jqassistant.core.store.api.model.Descriptor;
+import com.buschmais.jqassistant.core.scanner.impl.ScannerImpl;
+import com.buschmais.jqassistant.core.store.api.Store;
 import com.buschmais.jqassistant.plugin.common.test.AbstractPluginIT;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor;
@@ -32,6 +36,7 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
 
     private Scanner scanner;
     private File testClassesDir;
+    private Store spyStore;
 
     /**
      * Reset scanner and get classes directory.
@@ -46,6 +51,7 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
     /**
      * Test whether non-changelog-files will be rejected (not accepted).
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void acceptOnlyDatabaseChangeLogFiles() {
 
@@ -54,13 +60,20 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
         store.beginTransaction();
 
         for (File f : files) {
-
-            Descriptor descriptor = scanner.scan(f, "/" + f.getName(), null);
-            if (descriptor.getClass().isAssignableFrom(LiquibaseDescriptor.class)) {
-                Assert.fail("File [" + f.getName() + "] has to be rejected.");
-            }
+            scanner.scan(f, "/" + f.getName(), null);
         }
         store.commitTransaction();
+
+        // ////////////////////////////////////////////////////////////////////
+        // Verify
+        ArgumentCaptor<Class> capturedDescriptors = ArgumentCaptor.forClass(Class.class);
+        Mockito.verify(spyStore, Mockito.atLeastOnce()).create(capturedDescriptors.capture());
+
+        for (Class type : capturedDescriptors.getAllValues()) {
+            if (type.isAssignableFrom(LiquibaseDescriptor.class)) {
+                Assert.fail("Invalid files must not be scanned.");
+            }
+        }
     }
 
     /**
@@ -73,8 +86,10 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
         store.beginTransaction();
 
         ChangeLogDescriptor changeLogDescriptor = scanner.scan(masterFile, "/" + DIR_CHANGELOG + "/" + FILE_MASTER, null);
+        // ////////////////////////////////////////////////////////////////////
+        // Verify
+        Mockito.verify(spyStore, Mockito.times(2)).create(IncludeDescriptor.class);
         List<IncludeDescriptor> includes = changeLogDescriptor.getIncludes();
-        Assert.assertNotNull("Includes expected.", includes);
         Assert.assertEquals("Includes expected.", 2, includes.size());
 
         store.commitTransaction();
@@ -91,8 +106,10 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
 
         ChangeLogDescriptor changeLogDescriptor = scanner.scan(changeLogFile, "/" + DIR_CHANGELOG + "/" + FILE_VALID_CHANGELOG, null);
 
+        // ////////////////////////////////////////////////////////////////////
+        // Verify
+        Mockito.verify(spyStore, Mockito.times(2)).create(ChangeSetDescriptor.class);
         List<ChangeSetDescriptor> changeSets = changeLogDescriptor.getChangeSets();
-        Assert.assertNotNull("ChangeSets expected.", changeSets);
         Assert.assertEquals("ChangeSets expected.", 2, changeSets.size());
 
         for (ChangeSetDescriptor changeSetDescriptor : changeSets) {
@@ -122,6 +139,7 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
             scanner.scan(file, "/" + DIR_CHANGELOG + "/" + file.getName(), null);
         }
 
+        // //////////////////////////////////////////////////////////////////
         // Verify
         List<ChangeLogDescriptor> changeLogs = query("MATCH (inc:ChangeLog) RETURN inc").getColumn("inc");
         for (ChangeLogDescriptor changeLog : changeLogs) {
@@ -134,6 +152,18 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
                 Assert.assertNull("ChangeLog is nowhere included, so Include#file has to be null.", changeLog.getFile());
             }
         }
+
         store.commitTransaction();
+    }
+
+    @Override
+    protected Scanner getScanner() {
+
+        spyStore = Mockito.spy(store);
+        try {
+            return new ScannerImpl(spyStore, getScannerPluginRepository().getScannerPlugins());
+        } catch (PluginRepositoryException e) {
+            throw new IllegalStateException("Cannot get scanner plugins.", e);
+        }
     }
 }
