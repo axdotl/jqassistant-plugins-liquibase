@@ -50,6 +50,8 @@
         <maven-release-plugin_version>2.5.1</maven-release-plugin_version>
         <maven-javadoc-plugin_version>2.10.1</maven-javadoc-plugin_version>
         <maven-compiler-plugin_version>3.1</maven-compiler-plugin_version>
+        <org.mockito_version>1.10.8</org.mockito_version>
+        <junit_version>4.11</junit_version>
     </properties>
 
     <build>
@@ -57,7 +59,7 @@
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
                 <!-- Override b/o tagNameFormat available since 2.2 -->
-                <version>${maven-release-plugin_version}</version><!--$NO-MVN-MAN-VER$-->
+                <version>${maven-release-plugin_version}</version><!--$NO-MVN-MAN-VER$ -->
                 <configuration>
                     <useReleaseProfile>true</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
@@ -144,7 +146,7 @@
     </profiles>
 
     <dependencies>
-        <!-- JQAssistant -->
+        <!-- jQAssistant -->
         <dependency>
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>jqassistant.core.scanner</artifactId>
@@ -161,5 +163,26 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>${org.slf4j_version}</version>
         </dependency>
+        <!-- Test-related -->
+        <dependency>
+            <groupId>com.buschmais.jqassistant.plugin</groupId>
+            <artifactId>jqassistant.plugin.common</artifactId>
+            <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${org.mockito_version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

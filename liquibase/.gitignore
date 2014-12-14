@@ -4,3 +4,4 @@ target
 .settings
 /release.properties
 /*.releaseBackup
+/target/
