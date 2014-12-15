@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="addColumn" author="axdotl">
+        <addColumn tableName="TABLE1">
+            <column name="NEW_COLUMN" type="TEXT" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="addForeignKeyConstraint" author="axdotl">
+        <addForeignKeyConstraint constraintName="TABLE1_FK" referencedTableName="REF_TABLE" baseColumnNames="BASE_COL"
+            baseTableName="BASE_TABLE" referencedColumnNames="REF_COL" />
+    </changeSet>
+
+    <changeSet id="addNotNullConstraint" author="axdotl">
+        <addNotNullConstraint tableName="TABLE1" columnName="ID" />
+    </changeSet>
+
+    <changeSet id="addPrimaryKey" author="axdotl">
+        <addPrimaryKey tableName="TABLE1" columnNames="ID" constraintName="TABLE1_PK" />
+    </changeSet>
+
+    <changeSet id="addUniqueConstraint" author="axdotl">
+        <addUniqueConstraint tableName="TABLE1" columnNames="ID" constraintName="TABLE1_ID_UK" />
+    </changeSet>
+
+    <changeSet id="createSequence" author="axdotl">
+        <createSequence sequenceName="Sequence1" cycle="false" startValue="1" />
+    </changeSet>
+
+    <changeSet id="createTable" author="axdotl">
+        <createTable tableName="TABLE1">
+            <column name="ID" type="NUMBER(19)" />
+            <column name="NAME" type="VARCHAR2(255)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="dropColumn" author="axdotl">
+        <dropColumn tableName="TABLE1" columnName="ID" />
+    </changeSet>
+
+    <changeSet id="dropConstraint" author="axdotl">
+        <dropPrimaryKey tableName="TABLE1" />
+    </changeSet>
+
+    <changeSet id="dropTable" author="axdotl">
+        <dropTable tableName="TABLE1" />
+    </changeSet>
+
+    <changeSet id="sql" author="axdotl">
+        <sql>
+        <![CDATA[
+            CREATE TABLE TABLE2 (
+              ID NUMBER(19),
+              DESC VARCHAR2(255)
+            )
+        ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
