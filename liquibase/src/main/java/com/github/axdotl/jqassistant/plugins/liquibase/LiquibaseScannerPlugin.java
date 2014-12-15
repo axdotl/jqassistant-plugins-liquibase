@@ -24,12 +24,14 @@ import org.liquibase.xml.ns.dbchangelog.AddForeignKeyConstraint;
 import org.liquibase.xml.ns.dbchangelog.AddNotNullConstraint;
 import org.liquibase.xml.ns.dbchangelog.AddPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.AddUniqueConstraint;
+import org.liquibase.xml.ns.dbchangelog.CreateSequence;
 import org.liquibase.xml.ns.dbchangelog.CreateTable;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet.PreConditions;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.Include;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.IncludeAll;
+import org.liquibase.xml.ns.dbchangelog.DropColumn;
 import org.liquibase.xml.ns.dbchangelog.DropForeignKeyConstraint;
 import org.liquibase.xml.ns.dbchangelog.DropPrimaryKey;
 import org.liquibase.xml.ns.dbchangelog.DropTable;
@@ -63,7 +65,9 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddFo
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddNotNullConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateSequenceScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropColumnScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropConstraintScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropTableScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlScanner;
@@ -108,17 +112,19 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         factory = XMLInputFactory.newInstance();
 
         // Register scanner instances for certain refactoring types
+        scannerMap.put(AddColumn.class, new AddColumnScanner());
+        scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
+        scannerMap.put(AddNotNullConstraint.class, new AddNotNullConstraintScanner());
+        scannerMap.put(AddPrimaryKey.class, new AddPrimaryKeyScanner());
+        scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
+        scannerMap.put(CreateSequence.class, new CreateSequenceScanner());
         scannerMap.put(CreateTable.class, new CreateTableScanner());
+        scannerMap.put(DropColumn.class, new DropColumnScanner());
+        scannerMap.put(DropForeignKeyConstraint.class, new DropConstraintScanner());
+        scannerMap.put(DropPrimaryKey.class, new DropConstraintScanner());
+        scannerMap.put(DropUniqueConstraint.class, new DropConstraintScanner());
         scannerMap.put(DropTable.class, new DropTableScanner());
         scannerMap.put(Sql.class, new SqlScanner());
-        scannerMap.put(AddColumn.class, new AddColumnScanner());
-        scannerMap.put(AddPrimaryKey.class, new AddPrimaryKeyScanner());
-        scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
-        scannerMap.put(AddUniqueConstraint.class, new AddUniqueConstraintScanner());
-        scannerMap.put(AddNotNullConstraint.class, new AddNotNullConstraintScanner());
-        scannerMap.put(DropPrimaryKey.class, new DropConstraintScanner());
-        scannerMap.put(DropForeignKeyConstraint.class, new DropConstraintScanner());
-        scannerMap.put(DropUniqueConstraint.class, new DropConstraintScanner());
     }
 
     @Override

@@ -27,6 +27,7 @@
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropConstraintDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor</class>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.SqlDescriptor</class>
+        <class>com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateSequenceDescriptor</class>
     </model>
     <scanner>
         <class>com.github.axdotl.jqassistant.plugins.liquibase.LiquibaseScannerPlugin</class>
