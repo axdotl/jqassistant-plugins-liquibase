@@ -1,7 +1,9 @@
 package com.github.axdotl.jqassistant.plugins.liquibase;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
@@ -9,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.reflections.Reflections;
 
 import com.buschmais.jqassistant.core.plugin.api.PluginRepositoryException;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
@@ -19,17 +22,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescr
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddColumnDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddForeignKeyDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddNotNullConstraintDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddPrimaryKeyDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.AddUniqueConstraintDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateSequenceDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.CreateTableDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropColumnDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropConstraintDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.DropTableDescriptor;
-import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.SqlDescriptor;
+import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
 
 /**
  * Test class for the {@link LiquibaseScannerPlugin}.
@@ -169,30 +162,28 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
     }
 
     /**
-     * Tests whether known refactoring will be detected.
+     * Tests whether all descriptors implements {@link RefactoringDescriptor} will be detected.
      */
     @Test
     public void detectKnownRefactorings() {
+
         File changeLogFile = new File(testClassesDir, DIR_CHANGELOG + "/" + FILE_ALL_KOWN_REFACTORINGS);
         store.beginTransaction();
 
         scanner.scan(changeLogFile, "/" + DIR_CHANGELOG + "/" + FILE_ALL_KOWN_REFACTORINGS, null);
 
+        store.commitTransaction();
+
         // ////////////////////////////////////////////////////////////////////
         // Verify
-        Mockito.verify(spyStore, Mockito.times(1)).create(AddColumnDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(AddForeignKeyDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(AddNotNullConstraintDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(AddPrimaryKeyDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(AddUniqueConstraintDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(CreateSequenceDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(CreateTableDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(DropColumnDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(DropConstraintDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(DropTableDescriptor.class);
-        Mockito.verify(spyStore, Mockito.times(1)).create(SqlDescriptor.class);
-
-        store.commitTransaction();
+        Reflections reflections = new Reflections(RefactoringDescriptor.class.getPackage().getName());
+        Set<Class<? extends RefactoringDescriptor>> refactorings = reflections.getSubTypesOf(RefactoringDescriptor.class);
+        Iterator<Class<? extends RefactoringDescriptor>> iterator = refactorings.iterator();
+        while (iterator.hasNext()) {
+            Class<? extends RefactoringDescriptor> refactoring = iterator.next();
+            // Actual verify
+            Mockito.verify(spyStore, Mockito.times(1)).create(refactoring);
+        }
     }
 
     @Override
