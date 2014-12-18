@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Jqassistant-plugins-liquibase by axdotl</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Jqassistant-plugins-liquibase</h1>
+        <h2>Liquibase plugin for jQAssistant</h2>
+        <a href="https://github.com/axdotl/jqassistant-plugins-liquibase" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2>
+<a id="jqassistant-plugins-liquibase" class="anchor" href="#jqassistant-plugins-liquibase" aria-hidden="true"><span class="octicon octicon-link"></span></a>jQAssistant-plugins-liquibase</h2>
+
+<p>Liquibase plugin for <a href="https://jqassistant.org">jQAssistant</a></p>
+
+<h3>
+<a id="screen" class="anchor" href="#screen" aria-hidden="true"><span class="octicon octicon-link"></span></a>Screen</h3>
+
+<p><img src="https://github.com/axdotl/jqassistant-plugins-liquibase/blob/master/liquibase/screens/latest.png" alt="Latest"></p>
+
+<h3>
+<a id="available-constraints" class="anchor" href="#available-constraints" aria-hidden="true"><span class="octicon octicon-link"></span></a>Available constraints</h3>
+
+<ul>
+<li>ChangeSet
+
+<ul>
+<li>w/o ID</li>
+<li>w/o author</li>
+<li>w/o comment</li>
+</ul>
+</li>
+<li>SQL refactoring w/o rollback</li>
+<li>DROP refactorings w/o preCondition</li>
+</ul>
+
+<h3>
+<a id="example-queries" class="anchor" href="#example-queries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example queries</h3>
+
+<pre><code>// Top 10 authors
+MATCH (set:ChangeSet)
+RETURN set.author, COUNT(set.author) as number
+ORDER BY number DESC
+LIMIT 10;
+
+// All AddPrimaryKey changes w/o a constraint name or constraint name not like '&lt;table_name&gt;_PK'
+MATCH (log:ChangeLog)-[:HAS_CHANGESET]-&gt;(set:ChangeSet)-[:HAS_REFACTORING]-&gt;(addPk:AddPrimaryKey)
+WHERE addPk.constraintName &lt;&gt; UPPER(addPk.tableName)+"_PK"
+  OR addPk.constraintName IS NULL
+RETURN log.fileName, set.id,  set.author, addPk.tableName, addPk.columnNames, addPk.constraintName
+LIMIT 100;
+</code></pre>
+
+<h3>
+<a id="getting-started-using-maven" class="anchor" href="#getting-started-using-maven" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting started using Maven</h3>
+
+<ul>
+<li>Add the dependency to the jQAssistant Maven plugin</li>
+</ul>
+
+<div class="highlight highlight-xml"><pre>&lt;<span class="pl-ent">build</span>&gt;
+    &lt;<span class="pl-ent">plugins</span>&gt;
+        &lt;<span class="pl-ent">plugin</span>&gt;
+            &lt;<span class="pl-ent">groupId</span>&gt;com.buschmais.jqassistant.scm&lt;/<span class="pl-ent">groupId</span>&gt;
+            &lt;<span class="pl-ent">artifactId</span>&gt;jqassistant-maven-plugin&lt;/<span class="pl-ent">artifactId</span>&gt;
+            &lt;<span class="pl-ent">version</span>&gt;1.0.0-M4&lt;/<span class="pl-ent">version</span>&gt;
+            &lt;<span class="pl-ent">executions</span>&gt;
+                &lt;<span class="pl-ent">execution</span>&gt;
+                    &lt;<span class="pl-ent">goals</span>&gt;
+                        &lt;<span class="pl-ent">goal</span>&gt;scan&lt;/<span class="pl-ent">goal</span>&gt;
+                        &lt;<span class="pl-ent">goal</span>&gt;analyze&lt;/<span class="pl-ent">goal</span>&gt;
+                    &lt;/<span class="pl-ent">goals</span>&gt;
+                &lt;/<span class="pl-ent">execution</span>&gt;
+            &lt;/<span class="pl-ent">executions</span>&gt;
+            &lt;<span class="pl-ent">dependencies</span>&gt;
+                &lt;<span class="pl-ent">dependency</span>&gt;
+                    &lt;<span class="pl-ent">groupId</span>&gt;com.github.axdotl&lt;/<span class="pl-ent">groupId</span>&gt;
+                    &lt;<span class="pl-ent">artifactId</span>&gt;jqassistant-plugins-liquibase&lt;/<span class="pl-ent">artifactId</span>&gt;
+                    &lt;<span class="pl-ent">version</span>&gt;0.0.3&lt;/<span class="pl-ent">version</span>&gt;
+                &lt;/<span class="pl-ent">dependency</span>&gt;
+            &lt;/<span class="pl-ent">dependencies</span>&gt;
+        &lt;/<span class="pl-ent">plugin</span>&gt;
+    &lt;/<span class="pl-ent">plugins</span>&gt;
+&lt;/<span class="pl-ent">build</span>&gt;</pre></div>
+
+<ul>
+<li>Check availability of the rules</li>
+</ul>
+
+<pre><code>mvn jqassistant:available-rules
+</code></pre>
+
+<p>The output will contain the following constraints:</p>
+
+<pre><code>"liquibase:ChangeSetWithoutComment" - All change sets has to specify a comment.
+"liquibase:ChangeSetWithoutId" - All change sets has to specify the id attribute.
+"liquibase:SqlRefactoringWithoutRollback" - A change with SQL refactoring must provide a rollback element.
+</code></pre>
+
+<ul>
+<li>Scan and analyze</li>
+</ul>
+
+<p>Note: your liquibase changelog descriptors must be classpath resources (e.g. located in "src/main/resources")</p>
+
+<pre><code>mvn jqassistant:scan
+mvn jqassistant:analyze -Djqassistant.constraints=liquibase:ChangeSetWithoutComment,liquibase:ChangeSetWithoutId,liquibase:SqlRefactoringWithoutRollback
+</code></pre>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/axdotl/jqassistant-plugins-liquibase/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/axdotl/jqassistant-plugins-liquibase/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/axdotl/jqassistant-plugins-liquibase"></a> is maintained by <a href="https://github.com/axdotl">axdotl</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
