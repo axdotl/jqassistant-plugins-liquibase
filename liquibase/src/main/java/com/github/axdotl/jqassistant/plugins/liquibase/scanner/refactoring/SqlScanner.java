@@ -1,6 +1,5 @@
 package com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.liquibase.xml.ns.dbchangelog.Sql;
 
@@ -22,7 +21,7 @@ public class SqlScanner implements LiquibaseElementScanner<Sql, SqlDescriptor> {
         descriptor.setSplitStatements(BooleanUtils.toBoolean(element.getSplitStatements()));
         descriptor.setEndDelimiter(element.getEndDelimiter());
 
-        if (CollectionUtils.isNotEmpty(element.getContent())) {
+        if (!element.getContent().isEmpty()) {
             descriptor.setStatement(element.getContent().get(0).toString());
         }
 
