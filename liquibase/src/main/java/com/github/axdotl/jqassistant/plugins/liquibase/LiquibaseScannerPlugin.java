@@ -16,37 +16,23 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
-import org.liquibase.xml.ns.dbchangelog.AddColumn;
-import org.liquibase.xml.ns.dbchangelog.AddForeignKeyConstraint;
-import org.liquibase.xml.ns.dbchangelog.AddNotNullConstraint;
-import org.liquibase.xml.ns.dbchangelog.AddPrimaryKey;
-import org.liquibase.xml.ns.dbchangelog.AddUniqueConstraint;
-import org.liquibase.xml.ns.dbchangelog.CreateSequence;
-import org.liquibase.xml.ns.dbchangelog.CreateTable;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog;
+import org.liquibase.xml.ns.dbchangelog.*;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet.PreConditions;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.Include;
 import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.IncludeAll;
-import org.liquibase.xml.ns.dbchangelog.DropColumn;
-import org.liquibase.xml.ns.dbchangelog.DropForeignKeyConstraint;
-import org.liquibase.xml.ns.dbchangelog.DropPrimaryKey;
-import org.liquibase.xml.ns.dbchangelog.DropTable;
-import org.liquibase.xml.ns.dbchangelog.DropUniqueConstraint;
-import org.liquibase.xml.ns.dbchangelog.ObjectFactory;
-import org.liquibase.xml.ns.dbchangelog.Rollback;
-import org.liquibase.xml.ns.dbchangelog.Sql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
+import com.buschmais.jqassistant.core.scanner.api.ScannerPlugin.Requires;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.store.api.model.Descriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
+import com.buschmais.jqassistant.plugin.xml.api.model.XmlFileDescriptor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.Query.Result.CompositeRowObject;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeLogDescriptor;
@@ -60,17 +46,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.Rollb
 import com.github.axdotl.jqassistant.plugins.liquibase.exception.BlankStringRefactoringException;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddForeignKeyScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddNotNullConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateSequenceScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropColumnScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropTableScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.*;
 
 /**
  * Scanner for Liquibase database change log files.
@@ -80,6 +56,7 @@ import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlSc
  * @author Axel Koehler
  * @see <a href="http://www.liquibase.org/documentation/">http://www.liquibase.org/documentation/</a>
  */
+@Requires(XmlFileDescriptor.class)
 public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, ChangeLogDescriptor> {
 
     /** Cypher query to find an existing include node by file name */
@@ -416,7 +393,7 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
         rollbackDescriptor.setChangeSetPath(rollback.getChangeSetPath());
 
         List<Object> rollbackStatements = rollback.getContent();
-        if (CollectionUtils.isEmpty(rollbackStatements)) {
+        if (rollbackStatements.isEmpty()) {
             // No rollback statements, so we're done.
             return rollbackDescriptor;
         }
@@ -479,7 +456,8 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
         } else {
             LOGGER.debug("No Include found for path=[{}].", path);
-            changeLogDescriptor = scanner.getContext().getStore().create(ChangeLogDescriptor.class);
+            XmlFileDescriptor xmlFileDescriptor = scanner.getContext().peek(XmlFileDescriptor.class);
+            changeLogDescriptor = scanner.getContext().getStore().addDescriptorType(xmlFileDescriptor, ChangeLogDescriptor.class);
         }
 
         // Root element - changeLog

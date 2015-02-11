@@ -44,7 +44,7 @@
     </distributionManagement>
 
     <properties>
-        <com.buschmais.jqassistant_version>1.0.0-M4</com.buschmais.jqassistant_version>
+        <com.buschmais.jqassistant_version>1.0.0-RC-SNAPSHOT</com.buschmais.jqassistant_version>
         <org.jvnet.jaxb2.maven2_version>0.11.0</org.jvnet.jaxb2.maven2_version>
         <org.slf4j_version>1.7.7</org.slf4j_version>
         <maven-release-plugin_version>2.5.1</maven-release-plugin_version>
@@ -157,17 +157,29 @@
             <artifactId>jqassistant.plugin.common</artifactId>
             <version>${com.buschmais.jqassistant_version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.buschmais.jqassistant.plugin</groupId>
+            <artifactId>jqassistant.plugin.xml</artifactId>
+            <version>${com.buschmais.jqassistant_version}</version>
+        </dependency>
         <!-- Other -->
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
+            <artifactId>slf4j-simple</artifactId>
             <version>${org.slf4j_version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- Test-related -->
         <dependency>
             <groupId>com.buschmais.jqassistant.plugin</groupId>
             <artifactId>jqassistant.plugin.common</artifactId>
             <type>test-jar</type>
+            <version>${com.buschmais.jqassistant_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.buschmais.jqassistant.core</groupId>
+            <artifactId>jqassistant.core.plugin</artifactId>
             <version>${com.buschmais.jqassistant_version}</version>
             <scope>test</scope>
         </dependency>
