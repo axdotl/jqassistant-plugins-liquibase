@@ -1,6 +1,7 @@
 package com.github.axdotl.jqassistant.plugins.liquibase;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.reflections.Reflections;
 
 import com.buschmais.jqassistant.core.plugin.api.PluginRepositoryException;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
+import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.scanner.impl.ScannerImpl;
 import com.buschmais.jqassistant.core.store.api.Store;
 import com.buschmais.jqassistant.plugin.common.test.AbstractPluginIT;
@@ -191,7 +193,7 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
 
         spyStore = Mockito.spy(store);
         try {
-            return new ScannerImpl(spyStore, getScannerPluginRepository().getScannerPlugins());
+            return new ScannerImpl(spyStore, getScannerPluginRepository().getScannerPlugins(), Collections.<String, Scope> emptyMap());
         } catch (PluginRepositoryException e) {
             throw new IllegalStateException("Cannot get scanner plugins.", e);
         }
