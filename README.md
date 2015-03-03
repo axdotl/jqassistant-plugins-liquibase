@@ -44,7 +44,7 @@ LIMIT 100;
 		<plugin>
 			<groupId>com.buschmais.jqassistant.scm</groupId>
 			<artifactId>jqassistant-maven-plugin</artifactId>
-			<version>1.0.0-M4</version>
+			<version>1.0.0-RC1</version>
 			<executions>
 				<execution>
 					<goals>
