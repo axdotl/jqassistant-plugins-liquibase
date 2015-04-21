@@ -1,52 +1,12 @@
 package com.github.axdotl.jqassistant.plugins.liquibase;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.transform.stream.StreamSource;
-
-import org.apache.commons.lang.BooleanUtils;
-import org.apache.commons.lang.StringUtils;
-import org.liquibase.xml.ns.dbchangelog.AddColumn;
-import org.liquibase.xml.ns.dbchangelog.AddForeignKeyConstraint;
-import org.liquibase.xml.ns.dbchangelog.AddNotNullConstraint;
-import org.liquibase.xml.ns.dbchangelog.AddPrimaryKey;
-import org.liquibase.xml.ns.dbchangelog.AddUniqueConstraint;
-import org.liquibase.xml.ns.dbchangelog.CreateSequence;
-import org.liquibase.xml.ns.dbchangelog.CreateTable;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet.PreConditions;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.Include;
-import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.IncludeAll;
-import org.liquibase.xml.ns.dbchangelog.DropColumn;
-import org.liquibase.xml.ns.dbchangelog.DropForeignKeyConstraint;
-import org.liquibase.xml.ns.dbchangelog.DropPrimaryKey;
-import org.liquibase.xml.ns.dbchangelog.DropTable;
-import org.liquibase.xml.ns.dbchangelog.DropUniqueConstraint;
-import org.liquibase.xml.ns.dbchangelog.ObjectFactory;
-import org.liquibase.xml.ns.dbchangelog.Rollback;
-import org.liquibase.xml.ns.dbchangelog.Sql;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.store.api.model.Descriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import com.buschmais.jqassistant.plugin.xml.api.model.XmlFileDescriptor;
+import com.buschmais.jqassistant.plugin.xml.api.scanner.JAXBUnmarshaller;
 import com.buschmais.jqassistant.plugin.xml.api.scanner.XmlScope;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.Query.Result.CompositeRowObject;
@@ -61,17 +21,27 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.rollback.Rollb
 import com.github.axdotl.jqassistant.plugins.liquibase.exception.BlankStringRefactoringException;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.LiquibaseElementScanner;
 import com.github.axdotl.jqassistant.plugins.liquibase.scanner.precondition.PreconditionScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddColumnScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddForeignKeyScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddNotNullConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddPrimaryKeyScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.AddUniqueConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateSequenceScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.CreateTableScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropColumnScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropConstraintScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.DropTableScanner;
-import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.SqlScanner;
+import com.github.axdotl.jqassistant.plugins.liquibase.scanner.refactoring.*;
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+import org.liquibase.xml.ns.dbchangelog.*;
+import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet;
+import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.ChangeSet.PreConditions;
+import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.Include;
+import org.liquibase.xml.ns.dbchangelog.DatabaseChangeLog.IncludeAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.JAXBElement;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Scanner for Liquibase database change log files.
@@ -93,21 +63,17 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
     /** Mapping of refactoring elements to related scanner instance. */
     @SuppressWarnings("rawtypes")
     private final Map<Class, LiquibaseElementScanner> scannerMap = new HashMap<Class, LiquibaseElementScanner>();
+
     /** Used to unmarshal changelog, will be initialized once to improve performance. */
-    private JAXBContext jaxbContext;
+    private JAXBUnmarshaller<FileResource, DatabaseChangeLog> unmarshaller;
+
     /** Used to check whether the given file has <code>databaseChangeLog</code> as root element -&gt; it's a liquibase changelog file. */
     private XMLInputFactory factory;
 
     @Override
-    protected void initialize() {
-
-        try {
-            jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+    public void initialize() {
         factory = XMLInputFactory.newInstance();
-
+        unmarshaller = new JAXBUnmarshaller<>(DatabaseChangeLog.class);
         // Register scanner instances for certain refactoring types
         scannerMap.put(AddColumn.class, new AddColumnScanner());
         scannerMap.put(AddForeignKeyConstraint.class, new AddForeignKeyScanner());
@@ -156,20 +122,8 @@ public class LiquibaseScannerPlugin extends AbstractScannerPlugin<FileResource, 
 
     @Override
     public ChangeLogDescriptor scan(FileResource item, String path, Scope scope, Scanner scanner) throws IOException {
-
         ChangeLogDescriptor changeLogDescriptor = createChangeLogDescriptor(item, path, scanner);
-
-        // Unmarshal DatabaseChangeLog
-        DatabaseChangeLog changeLog;
-        try {
-            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            changeLog = unmarshaller.unmarshal(new StreamSource(item.createStream()), DatabaseChangeLog.class).getValue();
-
-        } catch (JAXBException e) {
-            LOGGER.error("Fail to unmarschal DatabaseChangeLog.", e);
-            return null;
-        }
-
+        DatabaseChangeLog changeLog = unmarshaller.unmarshal(item);
         List<Object> changeLogChildren = changeLog.getChangeSetOrIncludeOrIncludeAll();
 
         ChangeSetDescriptor lastChangeSetOfChangeLog = null;
