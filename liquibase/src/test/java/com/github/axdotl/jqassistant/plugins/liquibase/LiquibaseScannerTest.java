@@ -1,19 +1,5 @@
 package com.github.axdotl.jqassistant.plugins.liquibase;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.reflections.Reflections;
-
 import com.buschmais.jqassistant.core.plugin.api.PluginRepositoryException;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
@@ -25,6 +11,19 @@ import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.ChangeSetDescr
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.IncludeDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.LiquibaseDescriptor;
 import com.github.axdotl.jqassistant.plugins.liquibase.descriptor.refactoring.RefactoringDescriptor;
+import org.apache.commons.lang.StringUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.reflections.Reflections;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Test class for the {@link LiquibaseScannerPlugin}.
@@ -193,7 +192,7 @@ public class LiquibaseScannerTest extends AbstractPluginIT {
 
         spyStore = Mockito.spy(store);
         try {
-            return new ScannerImpl(spyStore, getScannerPluginRepository().getScannerPlugins(), Collections.<String, Scope> emptyMap());
+            return new ScannerImpl(spyStore, getScannerPluginRepository().getScannerPlugins(Collections.<String, Object> emptyMap()), Collections.<String, Scope> emptyMap());
         } catch (PluginRepositoryException e) {
             throw new IllegalStateException("Cannot get scanner plugins.", e);
         }
