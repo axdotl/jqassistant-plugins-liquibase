@@ -44,7 +44,7 @@ LIMIT 100;
 		<plugin>
 			<groupId>com.buschmais.jqassistant.scm</groupId>
 			<artifactId>jqassistant-maven-plugin</artifactId>
-			<version>1.0.0-RC1</version>
+			<version>1.0.0</version>
 			<executions>
 				<execution>
 					<goals>
@@ -57,7 +57,7 @@ LIMIT 100;
 				<dependency>
 					<groupId>com.github.axdotl</groupId>
 					<artifactId>jqassistant-plugins-liquibase</artifactId>
-					<version>0.0.4</version>
+					<version>0.0.5</version>
 				</dependency>
 			</dependencies>
 		</plugin>
